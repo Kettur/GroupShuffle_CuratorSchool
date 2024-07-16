@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.openxmlformats.schemas.drawingml.x2006.main.ThemeOverrideDocument;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -19,9 +20,10 @@ import static java.lang.Math.round;
 
 
 public class Main {
-    private ArrayList<Pair<String, Integer>> blockAndNumOfGroups = new ArrayList<>();
+    private ArrayList<String> blockArray = new ArrayList<>();
+    private ArrayList<Integer> blockGroupArray = new ArrayList<>();
     private ArrayList<String[]> potoksArray;
-    private int numOfBlocks, numOfPotoks, count = 0;
+    private int numOfBlocks, numOfPotoks, count = 0, countBlocks = 0;
     private File chosenFile;
     private JFrame frameFirst;
     private JPanel panelFirst, panelSecond;
@@ -97,6 +99,8 @@ public class Main {
         panelSecond.add(blockName);
         panelSecond.add(peopleInBlockText);
         panelSecond.add(peopleInBlock);
+        peopleInBlockText.setVisible(false);
+        peopleInBlock.setVisible(false);
         panelSecond.add(nextBlockButton);
         panelSecond.add(blocksLeftCountText);
 
@@ -151,31 +155,65 @@ public class Main {
     }
     public void divideFlows() throws IOException {
         count++;
-        blocksLeftCountText.setText("Осталось блоков: " + (numOfBlocks - count));
         if(count < numOfBlocks){
+            blocksLeftCountText.setText("Осталось названий блоков: " + (numOfBlocks - count));
             String str = blockName.getText();
-            int i1 = Integer.parseInt(peopleInBlock.getText());
-            blockAndNumOfGroups.add(new Pair<>(str, i1));
+            blockArray.add(str);
 
             blockName.setText("");
+        }
+        else if(count == numOfBlocks){
+            String str = blockName.getText();
+            blockArray.add(str);
+
+            blockName.setText("");
+            peopleInBlockText.setVisible(true);
+            peopleInBlock.setVisible(true);
+            blockName.setEditable(false);
+            blockName.setText(blockArray.get(0) + "_Поток_1");
+            blocksLeftCountText.setText("Осталось заполнить блоков: " + (numOfBlocks * numOfPotoks - countBlocks));
+        }
+        else if(countBlocks < ((numOfPotoks * numOfBlocks) - 1) && count > numOfBlocks){
+            countBlocks++;
+
+            blockName.setText(blockArray.get(countBlocks % numOfBlocks) + "_Поток_" + ((countBlocks/numOfBlocks) + 1));
+            blocksLeftCountText.setText("Осталось заполнить блоков: " + (numOfBlocks * numOfPotoks - countBlocks));
+
+            int peopleInBlockInt = Integer.parseInt(peopleInBlock.getText());
+            blockGroupArray.add(peopleInBlockInt);
             peopleInBlock.setText("");
+
         }
         else{
-            String str = blockName.getText();
-            int i1 = Integer.parseInt(peopleInBlock.getText());
-            blockAndNumOfGroups.add(new Pair<>(str, i1));
 
-            for (int j = 0; j < potoksArray.size(); j++) {
-                for (Pair<String, Integer> block : blockAndNumOfGroups) {
+            int peopleInBlockInt = Integer.parseInt(peopleInBlock.getText());
+            blockGroupArray.add(peopleInBlockInt);
+            peopleInBlock.setText("");
+
+            String userHome = System.getProperty("user.home");
+            userHome+="/Desktop";
+            File theDir = new File(userHome, "Потоки");
+            if (!theDir.exists()){
+                theDir.mkdirs();
+            }
+            userHome+="/Потоки";
+            for(int p = 0; p < numOfPotoks; p++){
+                File theDir1 = new File(userHome, "Поток " + (p + 1));
+                if (!theDir1.exists()){
+                    theDir1.mkdirs();
+                }
+            }
+
+            for (int j = 0; j < numOfPotoks; j++) {
+                for (int g = 0; g < numOfBlocks; g++) {
                     shuffleArray(potoksArray.get(j));
-                    String userHome = System.getProperty("user.home");
-                    userHome+="/Desktop";
-                    File file = new File(userHome, block.getFirst() + "_Поток_" + (j + 1) + ".xlsx");
+
+                    File file = new File(userHome + "/Поток " + (j + 1), blockArray.get(g) + "_Поток_" + (j + 1) + ".xlsx");
                     Workbook workbook = new XSSFWorkbook();
                     ArrayList<String[]> blockGroups = new ArrayList<>();
-                    int groupSize = round((float) potoksArray.get(j).length / block.getSecond());
-                    for (int i = 0; i < block.getSecond(); i++) {
-                        if (i + 1 == block.getSecond()) {
+                    int groupSize = round((float) potoksArray.get(j).length / blockGroupArray.get(g + j * numOfBlocks));
+                    for (int i = 0; i < blockGroupArray.get(g + j * numOfBlocks); i++) {
+                        if (i + 1 == blockGroupArray.get(g + j * numOfBlocks)) {
                             String[] temp = Arrays.copyOfRange(potoksArray.get(j), i * groupSize, potoksArray.get(j).length);
                             Sheet groupSheet = workbook.createSheet("Группа " + (i + 1));
                             for (int k = 0; k < temp.length; k++) {
