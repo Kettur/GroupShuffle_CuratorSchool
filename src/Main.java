@@ -193,7 +193,7 @@ public class Main {
             int peopleInBlockInt = Integer.parseInt(peopleInBlock.getText());
             blockGroupArray.add(peopleInBlockInt);
             String teachers = teachersInBlock.getText();
-            blockTeacherArray.add(teachers.split(" "));
+            blockTeacherArray.add(teachers.split(","));
             peopleInBlock.setText("");
             teachersInBlock.setText("");
 
@@ -203,7 +203,7 @@ public class Main {
             int peopleInBlockInt = Integer.parseInt(peopleInBlock.getText());
             blockGroupArray.add(peopleInBlockInt);
             String teachers = teachersInBlock.getText();
-            blockTeacherArray.add(teachers.split(" "));
+            blockTeacherArray.add(teachers.split(","));
             peopleInBlock.setText("");
             teachersInBlock.setText("");
 
